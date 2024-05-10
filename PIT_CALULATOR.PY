@@ -18,32 +18,49 @@ class tax_calculate:
 
 class PIT_calculator(tax_calculate):
     # constructor to initialize to employee details
-    def __init__(self,name,organisation_name, income,regular,organisation_type,married_status, children):
+    def __init__(self,name,organisation_name, income,regular,organisation_type,married_status,is_children, children):
         self.name = name
         self.organisation_name = organisation_name
         self.income = income
         self.regular = regular
         self.organisation_type = organisation_type
         self.married_status = married_status
+        self.is_children = is_children
         self.children = children
         
     def calculate_deduction(self):
+         # annual amount of NU 2400 of GIS contribution shall be deductible.
+        # 5% of  PF contribution shall be deductible
         deduction =  0
-        if  self.regular:
-            deduction += self.income * 0.1
-
-    #GIS 50% of contribution shall be deductible.
-        if self.organisation_type == 'govt':
-            deduction += self.income * 0.5 
-          
-        if self.married_status == 'married':
-            education_allowance = min(self.children * 350000, 350000)
-            deduction += education_allowance
+       # checking the employee type and organisation type for PF and GIS deduction
+        if self.regular:
+            if self.organisation_type == 'govt':
+                deduction +=self.income* 0.05
+                deduction += 2400
+            if self.organisation_type == 'private':
+                deduction += self.income* .05
+            elif self.organisation_type == 'corporate':
+                deduction += self.income* .05
+        elif not self.regular:
+            if self.organisation_type == 'private':
+                deduction += self.income* .05
+            elif self.organisation_type == 'corporate':
+                deduction += self.income* .05
+        else:
+            print('No deduction for PF and GIS')
+        # children education allowance deduction 
+        education_allowance = 0
+        if  self.children and isinstance(self.children,int) and self.children > 0:
+            education_allowance +=self.children * 350000
+        else:print('no deduction for children education allowance')
+        deduction += education_allowance
+    
         return deduction
     
     def calculate_tax(self):
         #function to calculate final tax payable 
-        taxable_income = self.income - self.calculate_deduction()
+        deduction = self.calculate_deduction()
+        taxable_income = self.income - deduction #self.calculate_deduction()
         tax = self.calculation_income_tax(taxable_income)
         if tax >= 1000000:
             tax += tax * 0.1  # Surcharge of 10% for income more than 1000000
@@ -55,11 +72,12 @@ def main():
     income = int(input("Enter employee monthly income: ")) * 12 # convert annual income
     regular = input("Is employee a regular employee? (y/n): ").lower() == 'y'
     organization_type = input("Enter organization type (govt/private/corporate): ").lower()
-    married_status = input('Is employee married? (y/n): ').lower() == 'y'        
+    married_status = input('Is employee married? (yes/no): ').lower() == 'yes'        
+    is_children = input ('Is children going to school? (y/n):').lower == 'y'
     children = int(input("Enter number of children: "))
 
     # Create an Employee object
-    employee = PIT_calculator(name, organisation_name,income, regular, organization_type, married_status, children)
+    employee = PIT_calculator(name, organisation_name,income, regular, organization_type, married_status,is_children, children)
 
     # Calculate and display tax payable
     tax_payable = employee.calculate_tax()
